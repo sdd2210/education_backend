@@ -12,8 +12,9 @@ app.get('/',(req,res)=>{
         message: 'Welcome to Project with Nodejs Express and MongoDB',
       });
 })
+let port = process.env.PORT||3000;
 conn.connectToServer();
 app.use(require('./route/route'));
-app.listen(3000,()=>{
-    console.log('listen port http://localhost:3000/')
+app.listen(port,()=>{
+    console.log(`listen port http://localhost:${port}/`)
 });
