@@ -79,9 +79,103 @@ module.exports = {
         }
       });
 
+  }, GetAll : (req,res) =>{
+    let pagesize = req.query.pagesize;
+    let pagenum = req.query.pagenum;
+
+    let sql = 'CALL `dbo`.`spGetTeacher`(?, ?);';
+
+    db.query(sql,[pagenum,pagesize],(err,result)=>{
+      if (err) {
+        res.status(400).send(err);
+      } else {
+        res.status(200).json(result[0]);
+      }
+    })
+  },
+  GetNew :(req,res)=>{
+    let sql = 'SELECT * FROM `dbo`.`teachers` order by CreateDate limit 1;'
+    
+    db.query(sql,(err,result)=>{
+      if (err) {
+        res.status(400).send(err);
+      } else {
+        res.status(200).json(result);
+      }
+    })
+  },
+  DeleteOne : (req,res)=>{
+    let id = req.params.id;
+    let sql = ` DELETE FROM dbo.teacher_departments WHERE TeacherId = ?;
+                DELETE FROM dbo.teacher_subjects WHERE TeacherId = ?;
+                DELETE FROM dbo.teachers WHERE TeacherId = ?;`
+    
+    db.query(sql,[id],(err,result)=>{
+      if (err) {
+        res.status(400).send(err);
+      } else {
+        res.status(200).send('Delete successfully');
+      }
+    })
+  },
+  UpdateOne : (req,res)=>{
+    let id = req.params.id;
+    let { name, gender, groupname, email, phone, dob, dayoff } = req.body;
+    let sql = 'CALL `dbo`.`spUpdateTeacherInfor`(?, ?, ?, ?, ?, ?,?, ?);';
+    db.query(sql,[id, `${name}`,`${gender}`,`${phone}`,`${groupname}`,`${email}`,`${dob}`,`${dayoff}`],(err,result)=>{
+      if (err) {
+        res.status(400).send(err);
+      } else {
+        res.status(200).send('Update successfully');
+      }
+    })
+  },
+  InsertMulti: (req, res) => {
+    let departs = [];
+    let count = 0;
+    let error = false;
+    let { department } = req.body;
+    let teacherid = req.params.teacherid;
+
+    departs = department;
+
+    for (let i = 0; i < departs.length; i++) {
+      db.promise().query('CALL `dbo`.`spInsertDepartment`(N?, ?)', [`${departs[i]}`, teacherid], (err, result) => { }).then(() => {
+        count++;
+        console.log("count ", count)
+        if (error) {
+          res.status(400).send(error);
+        }
+
+        console.log(count, departs.length)
+        if (count == departs.length) res.status(200).send('Success');
+        // else res.status(400).send('Có trường dữ liệu đã tồn tại');
+      })
+        .catch((err) => {
+          if (err) {
+            error = true;
+            res.status(400).send('Có trường dữ liệu đã tồn tại');
+          }
+        })
+
+
+    }
+
+  },
+  DeleteMulti : (req,res)=>{
+    let teachers = [];
+    let { teacherid } = req.body;
+    teachers = teacherid;
+    console.log(teachers.toString());
+    let sql = ` DELETE FROM dbo.teacher_departments WHERE TeacherId in  (${teachers.toString()} );
+                DELETE FROM dbo.teacher_subjects WHERE TeacherId in  (${teachers.toString()} );
+                DELETE FROM dbo.teachers WHERE TeacherId in  (${teachers.toString()} );`
+    db.query(sql,(err,result)=>{
+      if (err) {
+        res.status(400).send(err);
+      } else {
+        res.status(200).send('Delete multi successfully');
+      }
+    })
   }
-
-  // infor = JSON.parse(infor);
-
-
 }

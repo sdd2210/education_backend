@@ -13,7 +13,7 @@ app.get('/',(req,res)=>{
       });
 })
 conn.connectToServer();
-app.use(require('../education_backend/route/route'));
+app.use(require('./route/route'));
 app.listen(3000,()=>{
     console.log('listen port http://localhost:3000/')
 });

@@ -1,3 +1,5 @@
+let conn = require('../config/connect');
+let db = conn.connection();
 module.exports = {
     GetOne : (req,res)=>{
         let id = req.params.id;
