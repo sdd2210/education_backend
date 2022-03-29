@@ -7,6 +7,7 @@ let department = require('../controller/department')
 let teacher = require('../controller/teacher') 
 let teachergroup = require('../controller/teachergroup') 
 let subject = require('../controller/subject')
+let export_file = require('../controller/export')
 
 //--department
  //get
@@ -50,5 +51,8 @@ recordRoutes.get('/teacher/:id',teacher.FindOne);
   recordRoutes.get('/teachergroup/',teachergroup.GetAll);
   //getOne /teachergroup/:id
   recordRoutes.get('/teachergroup/:id',teachergroup.GetOne);
+//--export
+recordRoutes.get('/export',export_file.ExportTeacher)
+
 
 module.exports = recordRoutes;

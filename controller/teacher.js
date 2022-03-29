@@ -79,7 +79,9 @@ module.exports = {
         }
       });
 
-  }, GetAll : (req,res) =>{
+  }, 
+  
+  GetAll : (req,res) =>{
     let pagesize = req.query.pagesize;
     let pagenum = req.query.pagenum;
 
