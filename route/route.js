@@ -25,6 +25,7 @@ recordRoutes.post('/teacher',teacher.InsertOne);
  //getbyid
 recordRoutes.get('/teacher/:id',teacher.FindOne);
  //insert multi /teacher/full
+recordRoutes.post('/teacher/full',teacher.InsertMulti);
  //getall   /teacher?pagenum=&pagesize=
  recordRoutes.get('/teacher',teacher.GetAll);
  //update  /teacher/:id
@@ -35,7 +36,8 @@ recordRoutes.get('/teacher/:id',teacher.FindOne);
  recordRoutes.delete('/teacher/',teacher.DeleteMulti);
  //getnew  /teacher/new
  recordRoutes.get('/teacher/new',teacher.GetNew);
-
+//getbyName
+ recordRoutes.get('/teacher/name/:name',teacher.FindbyName);
 //---subject
   //getall
   recordRoutes.get('/subject/',subject.GetAll);

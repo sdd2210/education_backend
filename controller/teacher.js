@@ -4,35 +4,62 @@ module.exports = {
   InsertOne: async (req, res) => {
     let { name, gender, groupname, email, phone, dob, department } = req.body;
     let infor = [];
-    await db.query(
-      'CALL `dbo`.`spInsertTeacherInfor`(?,?,?,?,?,?)',
-      [`${name}`, `${gender}`, `${phone}`, `${groupname}`, `${email}`, `${dob}`],
-      (err, result) => {
-        if (err) {
-          res.status(400).send(err);
-          console.log(err);
-        } else {
+    if (name == null || email == null || phone == null) {
+      res.status(400).json([{ 'emess': 'Không dược bỏ trống' }]);
+    } else if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+      res.status(400).json([{ 'emess': 'Không đúng định dạng email' }]);
+    } else if (/(84|0[3|5|7|8|9])+([0-9]{8})\b/.test()) {
+      res.status(400).json([{ 'emess': 'Không đúng định dạng số điện thoại' }]);
+    } else {
+      await db.query(
+        'CALL `dbo`.`spInsertTeacherInfor`(?,?,?,?,?,?)',
+        [`${name}`, `${gender}`, `${phone}`, `${groupname}`, `${email}`, `${dob}`],
+        (err, result) => {
+          if (err) {
+            res.status(400).send(err);
+            console.log(err);
+          } else {
+            infor = result[1];
+            console.log(result[1]);
+            db.query(
+              'CALL `dbo`.`spInsertDepartmentByTeacher`(?, ?)',
+              [`${department}`, `${email}`],
+              (err, result) => {
 
-          infor = result[0];
-          db.query(
-            'CALL `dbo`.`spInsertDepartmentByTeacher`(?, ?)',
-            [`${department}`, `${email}`],
-            (err, result) => {
-              if (err) {
-                res.status(400).send(err);
-                console.log(err);
-              } else {
-                res.status(200).json(infor);
-                console.log(result);
+                if (err) {
+                  err['emess'] = "Trùng dữ liệu"
+                  res.status(400).send(err);
+                  console.log(err);
+                } else {
+                  res.status(200).json(infor);
+                  console.log(result);
+                }
               }
-            }
-          );
-        }
-      });
+            );
+          }
+        });
+    }
+
 
 
   },
+  FindbyName: (req, res) => {
+    try {
+      let name = req.params.name;
+      let sql = 'SELECT * FROM `dbo`.`teachers` where FullName like ?';
 
+      db.query(sql, [`%${name}%`], (err, result) => {
+        if (err) {
+          res.status(400).send(err);
+        } else {
+          res.status(200).json(result);
+        }
+      })
+    } catch (error) {
+      res.status(400).send(error);
+    }
+
+  },
   FindOne: (req, res) => {
     let id = req.params.id;
     let dep = [];
@@ -79,26 +106,32 @@ module.exports = {
         }
       });
 
-  }, 
-  
-  GetAll : (req,res) =>{
+  },
+
+  GetAll: (req, res) => {
     let pagesize = req.query.pagesize;
     let pagenum = req.query.pagenum;
 
     let sql = 'CALL `dbo`.`spGetTeacher`(?, ?);';
 
-    db.query(sql,[pagenum,pagesize],(err,result)=>{
+    db.query(sql, [pagenum, pagesize], async (err, result) => {
       if (err) {
         res.status(400).send(err);
       } else {
-        res.status(200).json(result[0]);
+        console.log(result[0].length);
+
+        let infor = await [{
+          total: result[0].length,
+          data: result[0]
+        }]
+        await res.status(200).json(infor);
       }
     })
   },
-  GetNew :(req,res)=>{
+  GetNew: (req, res) => {
     let sql = 'SELECT * FROM `dbo`.`teachers` order by CreateDate limit 1;'
-    
-    db.query(sql,(err,result)=>{
+
+    db.query(sql, (err, result) => {
       if (err) {
         res.status(400).send(err);
       } else {
@@ -106,13 +139,13 @@ module.exports = {
       }
     })
   },
-  DeleteOne : (req,res)=>{
+  DeleteOne: (req, res) => {
     let id = req.params.id;
     let sql = ` DELETE FROM dbo.teacher_departments WHERE TeacherId = ?;
                 DELETE FROM dbo.teacher_subjects WHERE TeacherId = ?;
                 DELETE FROM dbo.teachers WHERE TeacherId = ?;`
-    
-    db.query(sql,[id],(err,result)=>{
+
+    db.query(sql, [id, id, id], (err, result) => {
       if (err) {
         res.status(400).send(err);
       } else {
@@ -120,11 +153,11 @@ module.exports = {
       }
     })
   },
-  UpdateOne : (req,res)=>{
+  UpdateOne: (req, res) => {
     let id = req.params.id;
     let { name, gender, groupname, email, phone, dob, dayoff } = req.body;
     let sql = 'CALL `dbo`.`spUpdateTeacherInfor`(?, ?, ?, ?, ?, ?,?, ?);';
-    db.query(sql,[id, `${name}`,`${gender}`,`${phone}`,`${groupname}`,`${email}`,`${dob}`,`${dayoff}`],(err,result)=>{
+    db.query(sql, [id, `${name}`, `${gender}`, `${phone}`, `${groupname}`, `${email}`, `${dob}`, `${dayoff}`], (err, result) => {
       if (err) {
         res.status(400).send(err);
       } else {
@@ -164,7 +197,7 @@ module.exports = {
     }
 
   },
-  DeleteMulti : (req,res)=>{
+  DeleteMulti: (req, res) => {
     let teachers = [];
     let { teacherid } = req.body;
     teachers = teacherid;
@@ -172,7 +205,7 @@ module.exports = {
     let sql = ` DELETE FROM dbo.teacher_departments WHERE TeacherId in  (${teachers.toString()} );
                 DELETE FROM dbo.teacher_subjects WHERE TeacherId in  (${teachers.toString()} );
                 DELETE FROM dbo.teachers WHERE TeacherId in  (${teachers.toString()} );`
-    db.query(sql,(err,result)=>{
+    db.query(sql, (err, result) => {
       if (err) {
         res.status(400).send(err);
       } else {
