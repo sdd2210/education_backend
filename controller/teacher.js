@@ -6,9 +6,9 @@ module.exports = {
     let infor = [];
     if (name == null || email == null || phone == null) {
       res.status(400).json([{ 'emess': 'Không dược bỏ trống' }]);
-    } else if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+    } else if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)== false) {
       res.status(400).json([{ 'emess': 'Không đúng định dạng email' }]);
-    } else if (/(84|0[3|5|7|8|9])+([0-9]{8})\b/.test()) {
+    } else if (/(84|0[3|5|7|8|9])+([0-9]{8})\b/.test(phone)== false) {
       res.status(400).json([{ 'emess': 'Không đúng định dạng số điện thoại' }]);
     } else {
       await db.query(
